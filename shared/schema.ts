@@ -1,7 +1,9 @@
-import { pgTable, text, serial, integer, boolean, json, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, json, timestamp, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
+// User schema
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -16,15 +18,50 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
+// Trigger schema
+export const triggers = pgTable("triggers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTriggerSchema = createInsertSchema(triggers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type Trigger = typeof triggers.$inferSelect;
+export type InsertTrigger = z.infer<typeof insertTriggerSchema>;
+
+// Action schedule type enum
+export const actionScheduleEnum = pgEnum("action_schedule_type", ["immediate", "scheduled"]);
+
+// Action schema
+export const actions = pgTable("actions", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertActionSchema = createInsertSchema(actions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type Action = typeof actions.$inferSelect;
+export type InsertAction = z.infer<typeof insertActionSchema>;
+
 // Rule schema
 export const rules = pgTable("rules", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
-  trigger: text("trigger").notNull(),
+  triggerId: integer("trigger_id").notNull().references(() => triggers.id),
+  actionId: integer("action_id").notNull().references(() => actions.id),
   triggerConditions: json("trigger_conditions").$type<string[]>().default([]),
-  action: text("action").notNull(),
-  actionType: text("action_type").notNull().default("immediate"), // 'immediate' or 'scheduled'
+  actionType: actionScheduleEnum("action_type").notNull().default("immediate"),
   actionDetails: json("action_details").$type<Record<string, any>>().notNull().default({}),
   scheduleDelay: integer("schedule_delay").default(0), // In minutes, for scheduled actions
   isActive: boolean("is_active").notNull().default(true),
@@ -32,6 +69,35 @@ export const rules = pgTable("rules", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Activity logs schema
+export const activityLogs = pgTable("activity_logs", {
+  id: serial("id").primaryKey(),
+  ruleId: integer("rule_id").notNull().references(() => rules.id),
+  triggeredAt: timestamp("triggered_at").defaultNow(),
+  status: text("status").notNull(), // "success", "failed", "scheduled"
+  details: json("details").$type<Record<string, any>>().default({}),
+});
+
+// Define relations
+export const rulesRelations = relations(rules, ({ one }) => ({
+  trigger: one(triggers, {
+    fields: [rules.triggerId],
+    references: [triggers.id],
+  }),
+  action: one(actions, {
+    fields: [rules.actionId],
+    references: [actions.id],
+  }),
+}));
+
+export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
+  rule: one(rules, {
+    fields: [activityLogs.ruleId],
+    references: [rules.id],
+  }),
+}));
+
+// Create schemas for Zod validation
 export const insertRuleSchema = createInsertSchema(rules).omit({
   id: true,
   createdAt: true,
@@ -40,9 +106,16 @@ export const insertRuleSchema = createInsertSchema(rules).omit({
 
 export const updateRuleSchema = insertRuleSchema.partial();
 
+export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
+  id: true,
+});
+
+// Export types
 export type Rule = typeof rules.$inferSelect;
 export type InsertRule = z.infer<typeof insertRuleSchema>;
 export type UpdateRule = z.infer<typeof updateRuleSchema>;
+export type ActivityLog = typeof activityLogs.$inferSelect;
+export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 
 // Available trigger types
 export const triggerTypes = [
