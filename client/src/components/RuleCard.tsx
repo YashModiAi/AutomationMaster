@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Rule } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { formatRelative } from "date-fns";
-import { Pencil, Trash2, ArrowRight, Play, Clock, Calendar } from "lucide-react";
+import { Pencil, Trash2, ArrowRight, Play, Clock, Calendar, User } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,33 @@ import {
 } from "@/components/ui/alert-dialog";
 import { formatScheduleDelay } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+// Type of user for categorizing automation rules
+type UserType = 'admin' | 'security' | 'maintenance' | 'host' | 'guest' | null;
+
+// Helper to convert user type to display name
+function getUserTypeLabel(type: UserType): string {
+  switch (type) {
+    case 'admin': return 'Admin/Business Owner';
+    case 'security': return 'Security Team';
+    case 'maintenance': return 'Housekeeping & Maintenance';
+    case 'host': return 'Host/Property Manager';
+    case 'guest': return 'Guest';
+    default: return 'All Roles';
+  }
+}
+
+// Helper to get badge color for user type
+function getUserTypeColor(type: UserType): string {
+  switch (type) {
+    case 'admin': return 'bg-blue-100 text-blue-700 border-blue-200';
+    case 'security': return 'bg-red-100 text-red-700 border-red-200';
+    case 'maintenance': return 'bg-green-100 text-green-700 border-green-200';
+    case 'host': return 'bg-purple-100 text-purple-700 border-purple-200';
+    case 'guest': return 'bg-amber-100 text-amber-700 border-amber-200';
+    default: return 'bg-gray-100 text-gray-700 border-gray-200';
+  }
+}
 
 interface RuleCardProps {
   rule: Rule;
@@ -41,8 +68,10 @@ export default function RuleCard({ rule }: RuleCardProps) {
   // Toggle rule active status
   const toggleMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", `/api/rules/${rule.id}/toggle`, null);
-      return res.json();
+      return await apiRequest({
+        endpoint: `/api/rules/${rule.id}/toggle`,
+        method: "POST"
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/rules'] });
@@ -63,7 +92,10 @@ export default function RuleCard({ rule }: RuleCardProps) {
   // Delete rule
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("DELETE", `/api/rules/${rule.id}`, null);
+      await apiRequest({
+        endpoint: `/api/rules/${rule.id}`,
+        method: "DELETE" 
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/rules'] });
@@ -86,8 +118,10 @@ export default function RuleCard({ rule }: RuleCardProps) {
   // Trigger rule simulation
   const triggerMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", `/api/rules/${rule.id}/trigger`, null);
-      return res.json();
+      return await apiRequest({
+        endpoint: `/api/rules/${rule.id}/trigger`,
+        method: "POST"
+      });
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/rules'] });
@@ -188,7 +222,7 @@ export default function RuleCard({ rule }: RuleCardProps) {
             </div>
           </div>
           
-          <div className="flex flex-wrap items-center mb-4 gap-2">
+          <div className="flex flex-wrap items-center mb-2 gap-2">
             <div 
               className="bg-primary/10 text-primary text-xs px-2.5 py-1 rounded-full font-medium cursor-pointer flex items-center"
               onClick={handleRuleTest}
@@ -207,6 +241,16 @@ export default function RuleCard({ rule }: RuleCardProps) {
                 {formatScheduleDelay(rule.scheduleDelay)}
               </Badge>
             )}
+          </div>
+          
+          <div className="flex items-center mb-4">
+            <Badge 
+              variant="outline" 
+              className={`text-xs ${getUserTypeColor(rule.userType as UserType)}`}
+            >
+              <User className="h-3 w-3 mr-1" />
+              {getUserTypeLabel(rule.userType as UserType)}
+            </Badge>
           </div>
           
           <p className="text-sm text-gray-600 mb-4 line-clamp-2">

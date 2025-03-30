@@ -35,8 +35,7 @@ export const triggers = pgTable("triggers", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
   description: text("description"),
-  // Temporarily removed userType field to ensure compatibility with existing DB
-  // userType: userTypeEnum("user_type").notNull().default("admin"),
+  userType: userTypeEnum("user_type").notNull().default("admin"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -56,8 +55,7 @@ export const actions = pgTable("actions", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
   description: text("description"),
-  // Temporarily removed userType field to ensure compatibility with existing DB
-  // userType: userTypeEnum("user_type").notNull().default("admin"),
+  userType: userTypeEnum("user_type").notNull().default("admin"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -80,8 +78,7 @@ export const rules = pgTable("rules", {
   actionType: actionScheduleEnum("action_type").notNull().default("immediate"),
   actionDetails: json("action_details").$type<Record<string, any>>().notNull().default({}),
   scheduleDelay: integer("schedule_delay").default(0), // In minutes, for scheduled actions
-  // Temporarily removed userType field to ensure compatibility with existing DB
-  // userType: userTypeEnum("user_type").notNull().default("admin"), // Primary user type this rule is for
+  userType: userTypeEnum("user_type").notNull().default("admin"), // Primary user type this rule is for
   isActive: boolean("is_active").notNull().default(true),
   lastTriggered: timestamp("last_triggered"),
   createdAt: timestamp("created_at").defaultNow(),
