@@ -5,24 +5,32 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+import { storage } from './storage';
+
 export async function generateRuleSuggestions(prompt: string) {
   try {
-    // Define the system message to guide the AI's behavior
+    // Fetch available triggers and actions from the database
+    const triggers = await storage.getAllTriggers();
+    const actions = await storage.getAllActions();
+    
+    // Generate trigger list for the prompt
+    const triggersList = triggers.map(trigger => 
+      `- ${trigger.name} (ID: ${trigger.id}): ${trigger.description || 'No description'}`
+    ).join('\n');
+    
+    // Generate action list for the prompt
+    const actionsList = actions.map(action => 
+      `- ${action.name} (ID: ${action.id}): ${action.description || 'No description'}`
+    ).join('\n');
+    
+    // Define the system message with dynamic triggers and actions
     const systemMessage = `You are a workflow automation expert. Your task is to convert natural language descriptions into structured automation rules.
 
 Available Triggers:
-- Guest Check-In (ID: 1): Triggered when a guest checks in to their room
-- Room Cleaning Completed (ID: 2): Triggered when housekeeping marks a room as cleaned
-- Food Order Placed (ID: 3): Triggered when a guest places a food order
-- Guest Check-Out (ID: 4): Triggered when a guest checks out from their room
-- Maintenance Request (ID: 5): Triggered when a maintenance request is submitted
+${triggersList}
 
 Available Actions:
-- Send Email (ID: 1): Sends an email notification
-- Send SMS (ID: 2): Sends an SMS notification
-- Create Task (ID: 3): Creates a new task in the system
-- Update Status (ID: 4): Updates the status of an entity
-- Add Note (ID: 5): Adds a note to a guest profile or reservation
+${actionsList}
 
 For each rule suggestion, return:
 - name: A short, clear name for the rule (max 50 chars)

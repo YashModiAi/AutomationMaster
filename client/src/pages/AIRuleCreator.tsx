@@ -32,6 +32,14 @@ export default function AIRuleCreator() {
   const [suggestions, setSuggestions] = useState<RuleSuggestion[]>([]);
   const [selectedSuggestion, setSelectedSuggestion] = useState<RuleSuggestion | null>(null);
   const [_, navigate] = useLocation();
+  
+  // Example prompts that users can try
+  const examplePrompts = [
+    "When a guest checks in, send a welcome SMS after 5 minutes",
+    "Create a task for housekeeping when room cleaning is completed",
+    "Send an email when a maintenance request is submitted",
+    "When a food order is placed, update the status and send an SMS"
+  ];
 
   // Fetch triggers and actions
   const { data: triggers = [] } = useQuery<any[]>({
@@ -156,6 +164,20 @@ export default function AIRuleCreator() {
 
     createRuleMutation.mutate(ruleData);
   };
+  
+  // Function to use an example prompt
+  const useExamplePrompt = (example: string) => {
+    setPrompt(example);
+    // Scroll the textarea into view
+    const textarea = document.querySelector('textarea');
+    if (textarea) {
+      textarea.focus();
+      // Scroll to the textarea with a small delay to ensure focus works
+      setTimeout(() => {
+        textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+  };
 
   return (
     <div className="container py-10">
@@ -167,106 +189,180 @@ export default function AIRuleCreator() {
         >
           ← Back to Rules
         </Button>
-        <h1 className="text-3xl font-bold mb-2">AI Rule Creator</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/70 text-transparent bg-clip-text">AI Rule Creator</h1>
+        <p className="text-muted-foreground text-lg">
           Describe the automation rule you want to create in plain language, and our AI will help you set it up.
         </p>
       </div>
 
-      <div className="mb-6">
-        <label className="font-medium block mb-2">What automation would you like to create?</label>
-        <div className="flex gap-3">
-          <Textarea
-            placeholder="Example: When a guest checks in, send a welcome email after 10 minutes"
-            className="flex-1"
-            rows={3}
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            disabled={isGenerating}
-          />
-          <Button 
-            onClick={generateSuggestions}
-            disabled={isGenerating || !prompt.trim()}
-            className="self-end"
-          >
-            {isGenerating ? <Spinner className="mr-2" /> : null}
-            {isGenerating ? "Generating..." : "Generate"}
-          </Button>
+      <Card className="p-6 mb-8 border-primary/30">
+        <h2 className="text-xl font-semibold mb-4">Create New Automation</h2>
+        
+        {/* Information about available triggers and actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 p-4 bg-muted/30 rounded-lg">
+          <div>
+            <h3 className="text-sm font-medium mb-2 text-primary">Available Triggers</h3>
+            <ul className="text-sm space-y-1">
+              {triggers.map(trigger => (
+                <li key={trigger.id} className="flex items-start">
+                  <span className="mr-1.5 text-primary text-xs mt-0.5">•</span>
+                  <span>{trigger.name}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium mb-2 text-primary">Available Actions</h3>
+            <ul className="text-sm space-y-1">
+              {actions.map(action => (
+                <li key={action.id} className="flex items-start">
+                  <span className="mr-1.5 text-primary text-xs mt-0.5">•</span>
+                  <span>{action.name}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-      </div>
-
-      {isGenerating && (
-        <div className="flex flex-col items-center justify-center py-12">
-          <Spinner className="h-8 w-8 mb-4" />
-          <p className="text-muted-foreground">Generating rule suggestions...</p>
+        
+        {/* Example prompts section */}
+        <div className="mb-6">
+          <div className="flex flex-col mb-3">
+            <span className="text-sm font-medium mb-2">Try an example:</span>
+            <div className="flex flex-wrap gap-2">
+              {examplePrompts.map((example, index) => (
+                <Button 
+                  key={index} 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => useExamplePrompt(example)}
+                  className="text-xs border-primary/30 hover:bg-primary/5"
+                >
+                  {example.length > 40 ? example.substring(0, 40) + '...' : example}
+                </Button>
+              ))}
+            </div>
+          </div>
         </div>
-      )}
+        
+        <div className="mb-6">
+          <label className="font-medium block mb-2">What automation would you like to create?</label>
+          <div className="space-y-3">
+            <Textarea
+              placeholder="Example: When a guest checks in, send a welcome email after 10 minutes"
+              className="w-full"
+              rows={4}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              disabled={isGenerating}
+            />
+            <div className="flex items-center gap-3">
+              <Button 
+                onClick={generateSuggestions}
+                disabled={isGenerating || !prompt.trim()}
+                className="px-6"
+                size="lg"
+              >
+                {isGenerating ? <Spinner className="mr-2" /> : null}
+                {isGenerating ? "Generating..." : "Generate Suggestions"}
+              </Button>
+              {!isGenerating && prompt.trim() && (
+                <p className="text-muted-foreground text-sm">
+                  AI will analyze your request and suggest matching rules
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {isGenerating && (
+          <div className="flex flex-col items-center justify-center py-10 animate-pulse">
+            <Spinner className="h-10 w-10 mb-4 text-primary" />
+            <p className="text-muted-foreground">Analyzing your request and generating rule suggestions...</p>
+          </div>
+        )}
+      </Card>
 
       {!isGenerating && suggestions.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Suggested Rules</h2>
-          <p className="text-muted-foreground mb-4">
-            Select one of the suggestions below to create your rule:
+        <Card className="p-6 mb-8 border-primary/30">
+          <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+            <span className="bg-gradient-to-r from-primary to-primary/70 text-transparent bg-clip-text">AI-Generated Suggestions</span>
+            <Badge className="bg-primary/20 text-primary hover:bg-primary/30">{suggestions.length} option{suggestions.length !== 1 ? 's' : ''}</Badge>
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            Select the suggestion that best matches what you want to create:
           </p>
 
           <div className="grid gap-4">
             {suggestions.map((suggestion, index) => (
-              <Card
+              <div
                 key={index}
-                className={`p-4 cursor-pointer border-2 transition-all ${
+                className={`p-5 cursor-pointer border rounded-lg transition-all hover:shadow-md ${
                   selectedSuggestion === suggestion
-                    ? "border-primary bg-primary/5"
-                    : "hover:border-primary/50"
+                    ? "border-primary bg-primary/5 shadow-sm"
+                    : "border-border hover:border-primary/50"
                 }`}
                 onClick={() => handleSelectSuggestion(suggestion)}
               >
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-medium">{suggestion.name}</h3>
-                  <Badge variant="outline">
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="font-medium text-lg">{suggestion.name}</h3>
+                  <Badge 
+                    variant={
+                      suggestion.confidence > 0.8 ? "default" : 
+                      suggestion.confidence > 0.6 ? "secondary" : "outline"
+                    }
+                    className="ml-2"
+                  >
                     {Math.round(suggestion.confidence * 100)}% match
                   </Badge>
                 </div>
                 
                 {suggestion.description && (
-                  <p className="text-muted-foreground text-sm mb-3">
+                  <p className="text-muted-foreground mb-4">
                     {suggestion.description}
                   </p>
                 )}
                 
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">
-                    When: {suggestion.triggerName}
-                  </Badge>
-                  <Badge variant="secondary">
-                    Then: {suggestion.actionName} ({getActionTypeLabel(suggestion.actionType)}
-                    {suggestion.actionType === "scheduled" && suggestion.scheduleDelay 
-                      ? ` after ${formatScheduleDelay(suggestion.scheduleDelay)}` 
-                      : ""})
-                  </Badge>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <div className="flex items-center text-sm">
+                    <span className="font-semibold mr-2">When:</span>
+                    <Badge variant="secondary" className="font-normal">
+                      {suggestion.triggerName}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center text-sm">
+                    <span className="font-semibold mr-2">Then:</span>
+                    <Badge variant="secondary" className="font-normal">
+                      {suggestion.actionName} ({getActionTypeLabel(suggestion.actionType)}
+                      {suggestion.actionType === "scheduled" && suggestion.scheduleDelay 
+                        ? ` after ${formatScheduleDelay(suggestion.scheduleDelay)}` 
+                        : ""})
+                    </Badge>
+                  </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {selectedSuggestion && (
-        <div className="mt-6 flex justify-end">
-          <Button
-            onClick={handleCreateRule}
-            disabled={createRuleMutation.isPending}
-            className="w-full sm:w-auto"
-          >
-            {createRuleMutation.isPending ? <Spinner className="mr-2" /> : null}
-            {createRuleMutation.isPending ? "Creating..." : "Create Selected Rule"}
-          </Button>
-        </div>
+          
+          {selectedSuggestion && (
+            <div className="mt-6 flex justify-end">
+              <Button
+                onClick={handleCreateRule}
+                disabled={createRuleMutation.isPending}
+                className="w-full sm:w-auto"
+                size="lg"
+              >
+                {createRuleMutation.isPending ? <Spinner className="mr-2" /> : null}
+                {createRuleMutation.isPending ? "Creating..." : "Create Selected Rule"}
+              </Button>
+            </div>
+          )}
+        </Card>
       )}
 
       {!isGenerating && suggestions.length === 0 && prompt && (
-        <div className="text-center py-12">
+        <div className="text-center py-8 border rounded-lg border-dashed">
           <p className="text-muted-foreground">
-            No rule suggestions yet. Enter a prompt and click "Generate".
+            No rule suggestions yet. Enter a prompt and click "Generate Suggestions".
           </p>
         </div>
       )}
