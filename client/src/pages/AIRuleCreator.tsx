@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "../hooks/use-toast";
+import { apiRequest, queryClient } from "../lib/queryClient";
 import { InsertRule } from "@shared/schema";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
-import { formatTimeToNow, getActionTypeLabel, formatScheduleDelay } from "@/lib/utils";
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
+import { Badge } from "../components/ui/badge";
+import { Spinner } from "../components/ui/spinner";
+import { formatTimeToNow, getActionTypeLabel, formatScheduleDelay } from "../lib/utils";
 
 interface RuleSuggestion {
   name: string;
@@ -60,7 +60,7 @@ export default function AIRuleCreator() {
     setSelectedSuggestion(null);
 
     try {
-      const response = await apiRequest('/api/ai/generate-rule', 'POST', {
+      const response = await apiRequest('POST', '/api/ai/generate-rule', {
         prompt,
       });
 
@@ -107,7 +107,7 @@ export default function AIRuleCreator() {
   // Create rule mutation
   const createRuleMutation = useMutation({
     mutationFn: async (data: InsertRule) => {
-      const response = await apiRequest('/api/rules', 'POST', data);
+      const response = await apiRequest('POST', '/api/rules', data);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
