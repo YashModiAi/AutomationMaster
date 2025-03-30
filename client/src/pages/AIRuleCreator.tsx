@@ -77,8 +77,11 @@ export default function AIRuleCreator() {
     setSelectedSuggestion(null);
 
     try {
-      const response = await apiRequest('POST', '/api/ai/generate-rule', {
-        prompt,
+      const response = await fetch('/api/ai/generate-rule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -124,7 +127,12 @@ export default function AIRuleCreator() {
   // Create rule mutation
   const createRuleMutation = useMutation({
     mutationFn: async (data: InsertRule) => {
-      const response = await apiRequest('POST', '/api/rules', data);
+      const response = await fetch('/api/rules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include'
+      });
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
