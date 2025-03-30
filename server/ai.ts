@@ -59,7 +59,7 @@ Return ONLY a valid JSON object with a "suggestions" array containing 1-3 rule s
 
     // Call the OpenAI API
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      model: "gpt-4o-mini", // Using the more affordable gpt-4o-mini model as requested
       messages,
       temperature: 0.7,
       max_tokens: 1500,

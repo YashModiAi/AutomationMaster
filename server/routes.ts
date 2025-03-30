@@ -10,13 +10,64 @@ import { generateRuleSuggestions } from "./ai";
 import { scheduler } from "./scheduler";
 import { log } from "./vite";
 
+/**
+ * @swagger
+ * tags:
+ *   name: Triggers
+ *   description: API endpoints for managing triggers
+ * 
+ * components:
+ *   schemas:
+ *     Trigger:
+ *       type: object
+ *       required:
+ *         - id
+ *         - name
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: The auto-generated ID of the trigger
+ *         name:
+ *           type: string
+ *           description: The name of the trigger
+ *         description:
+ *           type: string
+ *           nullable: true
+ *           description: A description of what the trigger does
+ *         userType:
+ *           type: string
+ *           enum: [admin, security, maintenance, host, guest]
+ *           description: User role category the trigger is for
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: The date and time the trigger was created
+ */
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize database with default data
   await (storage as any).seedInitialData();
 
   // ===== TRIGGER ENDPOINTS =====
   
-  // Get all triggers
+  /**
+   * @swagger
+   * /triggers:
+   *   get:
+   *     summary: Retrieve a list of all triggers
+   *     tags: [Triggers]
+   *     responses:
+   *       200:
+   *         description: A list of triggers
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/Trigger'
+   *       500:
+   *         description: Server error
+   */
   app.get('/api/triggers', async (req: Request, res: Response) => {
     try {
       const triggers = await storage.getAllTriggers();
@@ -321,6 +372,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error generating rule suggestions:', error);
       res.status(500).json({ 
         message: `Failed to generate rule suggestions: ${error instanceof Error ? error.message : 'Unknown error'}`
+      });
+    }
+  });
+  
+  // ===== SETTINGS ENDPOINTS =====
+  
+  /**
+   * @swagger
+   * /settings/openai-key-status:
+   *   get:
+   *     summary: Check if OpenAI API key is configured
+   *     tags: [Settings]
+   *     responses:
+   *       200:
+   *         description: Status of OpenAI API key configuration
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 hasKey:
+   *                   type: boolean
+   *                   description: Whether an OpenAI API key is configured
+   */
+  app.get('/api/settings/openai-key-status', async (req: Request, res: Response) => {
+    try {
+      // Check if OPENAI_API_KEY exists in the environment
+      const hasKey = !!process.env.OPENAI_API_KEY;
+      res.json({ hasKey });
+    } catch (error) {
+      console.error('Error checking OpenAI API key status:', error);
+      res.status(500).json({ 
+        message: 'Failed to check API key status',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  /**
+   * @swagger
+   * /settings/openai-key:
+   *   post:
+   *     summary: Update the OpenAI API key
+   *     tags: [Settings]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - apiKey
+   *             properties:
+   *               apiKey:
+   *                 type: string
+   *                 description: The OpenAI API key
+   *     responses:
+   *       200:
+   *         description: API key updated successfully
+   *       400:
+   *         description: Invalid request
+   *       500:
+   *         description: Server error
+   */
+  app.post('/api/settings/openai-key', async (req: Request, res: Response) => {
+    try {
+      const { apiKey } = req.body;
+      
+      if (!apiKey || typeof apiKey !== 'string') {
+        return res.status(400).json({ message: 'Valid API key is required' });
+      }
+      
+      // Validate that the API key has the expected format
+      if (!apiKey.startsWith('sk-') || apiKey.length < 30) {
+        return res.status(400).json({ message: 'Invalid API key format' });
+      }
+      
+      // In a production environment, this would be stored securely
+      // For this demo, we're setting it to the environment variable
+      process.env.OPENAI_API_KEY = apiKey;
+      
+      res.json({ success: true, message: 'API key updated successfully' });
+    } catch (error) {
+      console.error('Error updating OpenAI API key:', error);
+      res.status(500).json({ 
+        message: 'Failed to update API key',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });

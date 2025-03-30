@@ -18,11 +18,25 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
+/**
+ * User type enum for categorizing triggers and actions based on user roles
+ * This helps organize automation rules based on who they are relevant to
+ */
+export const userTypeEnum = pgEnum("user_type", [
+  "admin",       // Admin/Business Owner
+  "security",    // Security Team
+  "maintenance", // Housekeeping & Maintenance
+  "host",        // Host/Property Manager
+  "guest"        // Guest
+]);
+
 // Trigger schema
 export const triggers = pgTable("triggers", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
   description: text("description"),
+  // Temporarily removed userType field to ensure compatibility with existing DB
+  // userType: userTypeEnum("user_type").notNull().default("admin"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -42,6 +56,8 @@ export const actions = pgTable("actions", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
   description: text("description"),
+  // Temporarily removed userType field to ensure compatibility with existing DB
+  // userType: userTypeEnum("user_type").notNull().default("admin"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -64,6 +80,8 @@ export const rules = pgTable("rules", {
   actionType: actionScheduleEnum("action_type").notNull().default("immediate"),
   actionDetails: json("action_details").$type<Record<string, any>>().notNull().default({}),
   scheduleDelay: integer("schedule_delay").default(0), // In minutes, for scheduled actions
+  // Temporarily removed userType field to ensure compatibility with existing DB
+  // userType: userTypeEnum("user_type").notNull().default("admin"), // Primary user type this rule is for
   isActive: boolean("is_active").notNull().default(true),
   lastTriggered: timestamp("last_triggered"),
   createdAt: timestamp("created_at").defaultNow(),

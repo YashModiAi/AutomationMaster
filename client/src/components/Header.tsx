@@ -1,4 +1,4 @@
-import { Settings, ClipboardList, Menu, X, Plus, Bell } from "lucide-react";
+import { Settings, ClipboardList, Menu, X, Plus, Bell, Cog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
@@ -35,6 +35,10 @@ export default function Header({ onCreateRule }: HeaderProps) {
               <Link href="/activity" className={`text-sm font-medium flex items-center ${location === '/activity' ? 'text-primary' : 'text-gray-500 hover:text-gray-700'}`}>
                 <ClipboardList className="mr-1 h-4 w-4" />
                 Activity Logs
+              </Link>
+              <Link href="/settings" className={`text-sm font-medium flex items-center ${location === '/settings' ? 'text-primary' : 'text-gray-500 hover:text-gray-700'}`}>
+                <Cog className="mr-1 h-4 w-4" />
+                Settings
               </Link>
             </nav>
             
@@ -107,6 +111,16 @@ export default function Header({ onCreateRule }: HeaderProps) {
               <div className="flex items-center">
                 <ClipboardList className="mr-2 h-5 w-5" />
                 Activity Logs
+              </div>
+            </Link>
+            <Link 
+              href="/settings" 
+              className={`block py-2 px-4 text-base font-medium rounded-md ${location === '/settings' ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <div className="flex items-center">
+                <Cog className="mr-2 h-5 w-5" />
+                Settings
               </div>
             </Link>
           </div>
