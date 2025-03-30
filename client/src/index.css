@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-primary: #6d4cff;
+  --color-primary-light: #a98df4;
+  --color-bg-light: #f7f8fa;
+  --color-bg-gradient: linear-gradient(135deg, #f7f1ff, #f3e7ff);
+  --color-success: #30c18c;
+  --color-danger: #f85a5a;
+  --color-warning: #faae42;
+  --color-info: #4f9eff;
+  --color-text: #1f2937;
+  --color-white: #ffffff;
+}
+
+body {
+  background: var(--color-bg-light);
+}
+
+.bg-gradient-custom {
+  background: var(--color-bg-gradient);
+}
+
 @layer base {
   * {
     @apply border-border;

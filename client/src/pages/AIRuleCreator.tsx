@@ -180,7 +180,7 @@ export default function AIRuleCreator() {
   };
 
   return (
-    <div className="container py-10">
+    <div className="container py-10 px-10">
       <div className="mb-8">
         <Button 
           variant="outline" 

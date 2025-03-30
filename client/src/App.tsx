@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import RuleCreator from "@/pages/RuleCreator";
 import AIRuleCreator from "@/pages/AIRuleCreator";
+import ActivityLogs from "@/pages/ActivityLogs";
 
 function Router() {
   return (
@@ -14,6 +15,7 @@ function Router() {
       <Route path="/rules/new" component={RuleCreator} />
       <Route path="/rules/edit/:id" component={RuleCreator} />
       <Route path="/rules/ai-new" component={AIRuleCreator} />
+      <Route path="/activity" component={ActivityLogs} />
       <Route component={NotFound} />
     </Switch>
   );

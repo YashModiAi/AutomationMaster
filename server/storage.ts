@@ -36,6 +36,9 @@ export interface IStorage {
   // Activity log operations
   getActivityLogsByRuleId(ruleId: number): Promise<ActivityLog[]>;
   createActivityLog(log: InsertActivityLog): Promise<ActivityLog>;
+  getPendingScheduledActions(): Promise<ActivityLog[]>;
+  markActivityLogAsExecuted(id: number, status: 'success' | 'failed', details?: Record<string, any>): Promise<ActivityLog | undefined>;
+  getActivityLogsByStatus(status: 'success' | 'failed' | 'scheduled' | 'canceled'): Promise<ActivityLog[]>;
 }
 
 // Database Storage implementation
@@ -243,6 +246,51 @@ export class DatabaseStorage implements IStorage {
   async createActivityLog(logData: InsertActivityLog): Promise<ActivityLog> {
     const [log] = await db.insert(activityLogs).values(logData).returning();
     return log;
+  }
+  
+  // Get pending scheduled actions that need to be executed
+  async getPendingScheduledActions(): Promise<ActivityLog[]> {
+    const now = new Date();
+    
+    // We need to manually filter by scheduleTime since Drizzle doesn't support lt on timestamp in this context
+    const scheduledActions = await db
+      .select()
+      .from(activityLogs)
+      .where(eq(activityLogs.status, 'scheduled'));
+    
+    // Filter out actions where scheduleTime is in the future or not set
+    return scheduledActions.filter(action => 
+      action.scheduleTime !== null && 
+      new Date(action.scheduleTime) <= now
+    );
+  }
+  
+  // Update activity log to mark it as executed
+  async markActivityLogAsExecuted(id: number, status: 'success' | 'failed', details?: Record<string, any>): Promise<ActivityLog | undefined> {
+    const startTime = Date.now();
+    const now = new Date();
+    
+    const [updatedLog] = await db
+      .update(activityLogs)
+      .set({
+        status: status,
+        executedAt: now,
+        executionDuration: Date.now() - startTime,
+        ...(details ? { details: details } : {})
+      })
+      .where(eq(activityLogs.id, id))
+      .returning();
+    
+    return updatedLog;
+  }
+  
+  // Get activity logs by status
+  async getActivityLogsByStatus(status: 'success' | 'failed' | 'scheduled' | 'canceled'): Promise<ActivityLog[]> {
+    return db
+      .select()
+      .from(activityLogs)
+      .where(eq(activityLogs.status, status))
+      .orderBy(desc(activityLogs.triggeredAt));
   }
 
   // For development - seed some initial data

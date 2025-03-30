@@ -7,6 +7,8 @@ import {
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { generateRuleSuggestions } from "./ai";
+import { scheduler } from "./scheduler";
+import { log } from "./vite";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize database with default data
@@ -249,43 +251,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Cannot trigger inactive rule' });
       }
 
-      // Simulate rule execution
-      const updatedRule = await storage.updateRuleLastTriggered(id);
+      const now = new Date();
+      let result;
+      let status: 'success' | 'scheduled';
 
-      // Create activity log entry
-      const logStatus = rule.actionType === 'immediate' ? 'success' : 'scheduled';
-      const executionTime = new Date();
-      const scheduleDelay = rule.scheduleDelay || 0;
-      const scheduledTime = rule.actionType === 'scheduled' ? 
-        new Date(executionTime.getTime() + scheduleDelay * 60 * 1000) : null;
-
-      // Store all details as a proper Record<string, any>
-      const logDetails: Record<string, any> = {
-        executedAt: executionTime.toISOString(),
-        scheduledFor: scheduledTime ? scheduledTime.toISOString() : null,
-        triggerConditions: Array.isArray(rule.triggerConditions) ? rule.triggerConditions : [],
-        actionDetails: rule.actionDetails || {}
-      };
-      
-      await storage.createActivityLog({
-        ruleId: rule.id,
-        status: logStatus,
-        details: logDetails
-      });
+      if (rule.actionType === 'immediate') {
+        // Execute the action immediately
+        log(`Executing immediate action for rule ${rule.id}`, 'routes');
+        result = await scheduler.triggerImmediateAction(rule.id);
+        status = 'success';
+      } else {
+        // Schedule the action for later execution
+        const scheduleDelay = rule.scheduleDelay || 0;
+        const scheduledTime = new Date(now.getTime() + scheduleDelay * 60 * 1000);
+        
+        log(`Scheduling action for rule ${rule.id} at ${scheduledTime.toISOString()}`, 'routes');
+        
+        result = await scheduler.scheduleAction(rule.id, scheduleDelay, {
+          triggerTime: now.toISOString(),
+          rule: {
+            name: rule.name,
+            description: rule.description,
+            actionDetails: rule.actionDetails
+          }
+        });
+        
+        status = 'scheduled';
+      }
 
       // Return success message with execution details
       res.json({ 
         message: 'Rule triggered successfully', 
-        rule: updatedRule,
+        rule: await storage.getRuleById(id),
         executionDetails: {
-          executedAt: executionTime,
-          status: logStatus,
-          ...(scheduledTime ? { scheduledFor: scheduledTime } : {})
+          status,
+          executedAt: now,
+          ...(status === 'scheduled' ? { 
+            scheduledFor: result.scheduleTime 
+          } : {})
         }
       });
     } catch (error) {
       console.error('Error triggering rule:', error);
-      res.status(500).json({ message: 'Failed to trigger rule' });
+      res.status(500).json({ 
+        message: `Failed to trigger rule: ${error instanceof Error ? error.message : 'Unknown error'}`
+      });
     }
   });
 
@@ -331,6 +341,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const logs = await storage.getActivityLogsByRuleId(id);
+      res.json(logs);
+    } catch (error) {
+      console.error('Error fetching activity logs:', error);
+      res.status(500).json({ message: 'Failed to fetch activity logs' });
+    }
+  });
+  
+  // Get all activity logs with optional status filter
+  app.get('/api/activity', async (req: Request, res: Response) => {
+    try {
+      const status = req.query.status as 'success' | 'failed' | 'scheduled' | 'canceled' | undefined;
+      
+      let logs;
+      if (status) {
+        logs = await storage.getActivityLogsByStatus(status);
+      } else {
+        // Get all logs from all statuses (would need to implement this in storage)
+        logs = [
+          ...(await storage.getActivityLogsByStatus('success')),
+          ...(await storage.getActivityLogsByStatus('failed')),
+          ...(await storage.getActivityLogsByStatus('scheduled'))
+        ];
+      }
+      
       res.json(logs);
     } catch (error) {
       console.error('Error fetching activity logs:', error);

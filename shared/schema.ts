@@ -69,13 +69,19 @@ export const rules = pgTable("rules", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Activity type enum
+export const activityStatusEnum = pgEnum("activity_status", ["success", "failed", "scheduled", "canceled"]);
+
 // Activity logs schema
 export const activityLogs = pgTable("activity_logs", {
   id: serial("id").primaryKey(),
   ruleId: integer("rule_id").notNull().references(() => rules.id),
   triggeredAt: timestamp("triggered_at").defaultNow(),
-  status: text("status").notNull(), // "success", "failed", "scheduled"
+  status: activityStatusEnum("status").notNull(),
   details: json("details").$type<Record<string, any>>().default({}),
+  scheduleTime: timestamp("schedule_time"),
+  executedAt: timestamp("executed_at"),
+  executionDuration: integer("execution_duration"), // in milliseconds
 });
 
 // Define relations
