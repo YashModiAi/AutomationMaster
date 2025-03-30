@@ -23,11 +23,12 @@ export type User = typeof users.$inferSelect;
  * This helps organize automation rules based on who they are relevant to
  */
 export const userTypeEnum = pgEnum("user_type", [
-  "admin",       // Admin/Business Owner
-  "security",    // Security Team
-  "maintenance", // Housekeeping & Maintenance
-  "host",        // Host/Property Manager
-  "guest"        // Guest
+  "admin",         // Admin/Business Owner
+  "security",      // Security Team
+  "maintenance",   // Housekeeping & Maintenance
+  "host",          // Host/Property Manager
+  "guest",         // Guest
+  "miscellaneous"  // Miscellaneous
 ]);
 
 // Trigger schema

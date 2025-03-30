@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 // Type of user for categorizing automation rules
-type UserType = 'admin' | 'security' | 'maintenance' | 'host' | 'guest' | null;
+type UserType = 'admin' | 'security' | 'maintenance' | 'host' | 'guest' | 'miscellaneous' | null;
 
 // Helper to convert user type to display name
 function getUserTypeLabel(type: UserType): string {
@@ -40,6 +40,7 @@ function getUserTypeLabel(type: UserType): string {
     case 'maintenance': return 'Housekeeping & Maintenance';
     case 'host': return 'Host/Property Manager';
     case 'guest': return 'Guest';
+    case 'miscellaneous': return 'Miscellaneous';
     default: return 'All Roles';
   }
 }
@@ -52,6 +53,7 @@ function getUserTypeColor(type: UserType): string {
     case 'maintenance': return 'bg-green-100 text-green-700 border-green-200';
     case 'host': return 'bg-purple-100 text-purple-700 border-purple-200';
     case 'guest': return 'bg-amber-100 text-amber-700 border-amber-200';
+    case 'miscellaneous': return 'bg-pink-100 text-pink-700 border-pink-200';
     default: return 'bg-gray-100 text-gray-700 border-gray-200';
   }
 }
@@ -201,6 +203,13 @@ export default function Home() {
                     >
                       Guest
                       {filterUserType === 'guest' && <Badge className="ml-auto">Active</Badge>}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className={filterUserType === 'miscellaneous' ? "font-semibold bg-gray-50" : ""}
+                      onClick={() => setFilterUserType('miscellaneous')}
+                    >
+                      Miscellaneous
+                      {filterUserType === 'miscellaneous' && <Badge className="ml-auto">Active</Badge>}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

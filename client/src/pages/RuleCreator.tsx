@@ -43,7 +43,7 @@ const ruleFormSchema = insertRuleSchema.extend({
   name: z.string().min(1, "Rule name is required"),
   triggerId: z.number().min(1, "Trigger is required"),
   actionId: z.number().min(1, "Action is required"),
-  userType: z.enum(["admin", "security", "maintenance", "host", "guest"], {
+  userType: z.enum(["admin", "security", "maintenance", "host", "guest", "miscellaneous"], {
     required_error: "Please select a user type",
   }),
 });
@@ -541,6 +541,7 @@ export default function RuleCreator() {
                         <SelectItem value="maintenance">Housekeeping & Maintenance</SelectItem>
                         <SelectItem value="host">Host/Property Manager</SelectItem>
                         <SelectItem value="guest">Guest</SelectItem>
+                        <SelectItem value="miscellaneous">Miscellaneous</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -814,7 +815,9 @@ export default function RuleCreator() {
                           ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
                           : watchedUserType === 'host'
                           ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                          : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                          : watchedUserType === 'guest'
+                          ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                          : 'bg-purple-100 text-purple-800 hover:bg-purple-200'
                       }`}
                     >
                       {watchedUserType === 'admin'
@@ -825,7 +828,9 @@ export default function RuleCreator() {
                         ? 'Housekeeping & Maintenance'
                         : watchedUserType === 'host'
                         ? 'Host/Property Manager'
-                        : 'Guest'}
+                        : watchedUserType === 'guest'
+                        ? 'Guest'
+                        : 'Miscellaneous'}
                     </Badge>
                   )}
                 </div>

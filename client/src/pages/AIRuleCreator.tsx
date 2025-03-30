@@ -232,6 +232,7 @@ export default function AIRuleCreator() {
               <SelectItem value="maintenance">Housekeeping & Maintenance</SelectItem>
               <SelectItem value="host">Host/Property Manager</SelectItem>
               <SelectItem value="guest">Guest</SelectItem>
+              <SelectItem value="miscellaneous">Miscellaneous</SelectItem>
             </SelectContent>
           </Select>
           <p className="text-sm text-muted-foreground mt-1">
@@ -398,7 +399,9 @@ export default function AIRuleCreator() {
                       ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
                       : selectedUserType === 'host'
                       ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                      : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                      : selectedUserType === 'guest'
+                      ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                      : 'bg-purple-100 text-purple-800 hover:bg-purple-200'
                   }
                 >
                   {selectedUserType === 'admin'
@@ -409,7 +412,9 @@ export default function AIRuleCreator() {
                     ? 'Housekeeping & Maintenance'
                     : selectedUserType === 'host'
                     ? 'Host/Property Manager'
-                    : 'Guest'}
+                    : selectedUserType === 'guest'
+                    ? 'Guest'
+                    : 'Miscellaneous'}
                 </Badge>
               </div>
               <div className="flex justify-end">
