@@ -13,8 +13,16 @@ import { log } from "./vite";
 /**
  * @swagger
  * tags:
- *   name: Triggers
- *   description: API endpoints for managing triggers
+ *   - name: Triggers
+ *     description: API endpoints for managing triggers
+ *   - name: Actions
+ *     description: API endpoints for managing actions
+ *   - name: Rules
+ *     description: API endpoints for managing automation rules
+ *   - name: Activity
+ *     description: API endpoints for monitoring rule execution
+ *   - name: Settings
+ *     description: API endpoints for application configuration
  * 
  * components:
  *   schemas:
@@ -65,6 +73,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
    *               type: array
    *               items:
    *                 $ref: '#/components/schemas/Trigger'
+   *       500:
+   *         description: Server error
+   *   post:
+   *     summary: Create a new trigger
+   *     tags: [Triggers]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/Trigger'
+   *     responses:
+   *       201:
+   *         description: Trigger created successfully
+   *       400:
+   *         description: Invalid request body
+   *       500:
+   *         description: Server error
+   * 
+   * /triggers/{id}:
+   *   get:
+   *     summary: Get trigger by ID
+   *     tags: [Triggers]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *     responses:
+   *       200:
+   *         description: Trigger details
+   *       404:
+   *         description: Trigger not found
+   *       500:
+   *         description: Server error
+   * 
+   * /actions:
+   *   get:
+   *     summary: Retrieve a list of all actions
+   *     tags: [Actions]
+   *     responses:
+   *       200:
+   *         description: A list of actions
+   *       500:
+   *         description: Server error
+   * 
+   * /rules:
+   *   get:
+   *     summary: Retrieve all automation rules
+   *     tags: [Rules]
+   *     responses:
+   *       200:
+   *         description: A list of rules
+   *       500:
+   *         description: Server error
+   * 
+   * /rules/{id}/activity:
+   *   get:
+   *     summary: Get activity logs for a specific rule
+   *     tags: [Activity]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *     responses:
+   *       200:
+   *         description: Activity logs for the rule
+   *       404:
+   *         description: Rule not found
+   *       500:
+   *         description: Server error
+   * 
+   * /ai/generate-rule:
+   *   post:
+   *     summary: Generate rule suggestions using AI
+   *     tags: [Rules]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               prompt:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: AI-generated rule suggestions
    *       500:
    *         description: Server error
    */
