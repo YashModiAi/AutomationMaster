@@ -150,6 +150,7 @@ export class DatabaseStorage implements IStorage {
       triggerConditions,
       actionType: ruleData.actionType,
       actionDetails,
+      userType: ruleData.userType || 'admin', // Include user type
       isActive: ruleData.isActive !== undefined ? ruleData.isActive : true,
       scheduleDelay: ruleData.scheduleDelay || 0
     }).returning();

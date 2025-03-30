@@ -30,6 +30,7 @@ interface RuleSuggestion {
   actionType: "immediate" | "scheduled";
   scheduleDelay?: number;
   actionDetails: Record<string, any>;
+  userType?: string; // Add user type to suggestion interface
   confidence: number;
 }
 
@@ -160,6 +161,12 @@ export default function AIRuleCreator() {
 
   const handleSelectSuggestion = (suggestion: RuleSuggestion) => {
     setSelectedSuggestion(suggestion);
+    
+    // If the suggestion has a user type, set it as the selected user type
+    if (suggestion.userType && 
+        ['admin', 'security', 'maintenance', 'host', 'guest', 'miscellaneous'].includes(suggestion.userType)) {
+      setSelectedUserType(suggestion.userType);
+    }
   };
 
   const handleCreateRule = () => {
@@ -380,6 +387,38 @@ export default function AIRuleCreator() {
                         : ""})
                     </Badge>
                   </div>
+                  {suggestion.userType && (
+                    <div className="flex items-center text-sm">
+                      <span className="font-semibold mr-2">For:</span>
+                      <Badge 
+                        className={
+                          suggestion.userType === 'admin'
+                            ? 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200'
+                            : suggestion.userType === 'security'
+                            ? 'bg-red-100 text-red-800 hover:bg-red-200'
+                            : suggestion.userType === 'maintenance'
+                            ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                            : suggestion.userType === 'host'
+                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                            : suggestion.userType === 'guest'
+                            ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                            : 'bg-purple-100 text-purple-800 hover:bg-purple-200'
+                        }
+                      >
+                        {suggestion.userType === 'admin'
+                          ? 'Admin/Business Owner'
+                          : suggestion.userType === 'security'
+                          ? 'Security Team'
+                          : suggestion.userType === 'maintenance'
+                          ? 'Housekeeping & Maintenance'
+                          : suggestion.userType === 'host'
+                          ? 'Host/Property Manager'
+                          : suggestion.userType === 'guest'
+                          ? 'Guest'
+                          : 'Miscellaneous'}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

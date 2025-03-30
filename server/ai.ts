@@ -38,6 +38,14 @@ ${triggersList}
 Available Actions:
 ${actionsList}
 
+Available User Types:
+- admin: For administrative staff and management
+- security: For security personnel
+- maintenance: For maintenance and housekeeping staff
+- host: For property managers and hosts
+- guest: For guests and customers
+- miscellaneous: For any other user types
+
 For each rule suggestion, return:
 - name: A short, clear name for the rule (max 50 chars)
 - description: A longer description of what the rule does
@@ -46,6 +54,7 @@ For each rule suggestion, return:
 - actionType: Either "immediate" (execute right away) or "scheduled" (execute after a delay)
 - scheduleDelay: If actionType is "scheduled", the delay in minutes before executing
 - actionDetails: An object containing any additional configuration needed for the action
+- userType: One of the available user types (admin, security, maintenance, host, guest, miscellaneous)
 - confidence: A number between 0 and 1 indicating how confident you are that this suggestion matches what the user wants
 
 Return ONLY a valid JSON object with a "suggestions" array containing 1-3 rule suggestions, sorted by confidence (highest first).
@@ -91,6 +100,12 @@ Return ONLY a valid JSON object with a "suggestions" array containing 1-3 rule s
     // Post-process and validate each suggestion
     const validatedSuggestions = parsedContent.suggestions.map(
       (suggestion: any) => {
+        // Validate user type
+        const validUserTypes = ['admin', 'security', 'maintenance', 'host', 'guest', 'miscellaneous'];
+        const userType = validUserTypes.includes(suggestion.userType) 
+          ? suggestion.userType 
+          : 'admin'; // Default to admin if invalid or missing
+        
         // Ensure all required fields are present
         const validatedSuggestion: {
           name: string;
@@ -100,6 +115,7 @@ Return ONLY a valid JSON object with a "suggestions" array containing 1-3 rule s
           actionType: "immediate" | "scheduled";
           actionDetails: Record<string, any>;
           confidence: number;
+          userType: string;
           scheduleDelay?: number;
         } = {
           name: String(suggestion.name || "").substring(0, 50),
@@ -113,6 +129,7 @@ Return ONLY a valid JSON object with a "suggestions" array containing 1-3 rule s
             : "immediate",
           actionDetails: suggestion.actionDetails || {},
           confidence: Number(suggestion.confidence) || 0.5,
+          userType: userType, // Add user type
         };
 
         // Add scheduleDelay if actionType is 'scheduled'
