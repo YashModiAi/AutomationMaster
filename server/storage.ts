@@ -174,6 +174,7 @@ export class DatabaseStorage implements IStorage {
     if (ruleData.actionId !== undefined) updates.actionId = ruleData.actionId;
     if (ruleData.isActive !== undefined) updates.isActive = ruleData.isActive;
     if (ruleData.scheduleDelay !== undefined) updates.scheduleDelay = ruleData.scheduleDelay;
+    if (ruleData.userType !== undefined) updates.userType = ruleData.userType;
     
     // Handle enum field
     if (ruleData.actionType !== undefined) {
