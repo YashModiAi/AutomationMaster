@@ -33,7 +33,7 @@ export function setupSwagger(app: Express) {
         schemas: {
           UserType: {
             type: 'string',
-            enum: ['admin', 'security', 'maintenance', 'host', 'guest'],
+            enum: ['admin', 'security', 'maintenance', 'host', 'guest', 'miscellaneous'],
             description: 'User role category for organizing automation rules',
           },
           Trigger: {
