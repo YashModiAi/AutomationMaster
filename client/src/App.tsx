@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import RuleCreator from "@/pages/RuleCreator";
+import AIRuleCreator from "@/pages/AIRuleCreator";
 
 function Router() {
   return (
@@ -12,6 +13,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/rules/new" component={RuleCreator} />
       <Route path="/rules/edit/:id" component={RuleCreator} />
+      <Route path="/rules/ai-new" component={AIRuleCreator} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -9,8 +9,11 @@ import { Rule } from "@shared/schema";
 import { Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Wand2 } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -40,6 +43,16 @@ export default function Home() {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800">Your Automation Rules</h2>
             <div className="flex space-x-2">
+              <Link 
+                to="/rules/ai-new"
+                className={buttonVariants({
+                  variant: "outline",
+                  className: "mr-2 flex items-center gap-1"
+                })}
+              >
+                <Wand2 className="h-4 w-4 mr-1" />
+                Try AI Rule Creator
+              </Link>
               <div className="relative">
                 <Input
                   type="text"

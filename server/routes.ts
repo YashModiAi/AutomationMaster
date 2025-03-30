@@ -6,6 +6,7 @@ import {
   insertActionSchema, insertActivityLogSchema 
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
+import { generateRuleSuggestions } from "./ai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize database with default data
@@ -285,6 +286,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error triggering rule:', error);
       res.status(500).json({ message: 'Failed to trigger rule' });
+    }
+  });
+
+  // ===== AI ENDPOINTS =====
+  
+  // Generate rule suggestions using AI
+  app.post('/api/ai/generate-rule', async (req: Request, res: Response) => {
+    try {
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ 
+          message: 'OpenAI API key not configured. Please set the OPENAI_API_KEY environment variable.' 
+        });
+      }
+      
+      const { prompt } = req.body;
+      if (!prompt || typeof prompt !== 'string') {
+        return res.status(400).json({ message: 'Valid prompt is required' });
+      }
+      
+      const suggestions = await generateRuleSuggestions(prompt);
+      res.json(suggestions);
+    } catch (error) {
+      console.error('Error generating rule suggestions:', error);
+      res.status(500).json({ 
+        message: `Failed to generate rule suggestions: ${error instanceof Error ? error.message : 'Unknown error'}`
+      });
     }
   });
 
