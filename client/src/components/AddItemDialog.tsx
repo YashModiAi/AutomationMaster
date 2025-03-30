@@ -54,7 +54,18 @@ export default function AddItemDialog({ open, onOpenChange, type }: AddItemDialo
   const createMutation = useMutation({
     mutationFn: async (data: ItemFormValues) => {
       const endpoint = type === 'trigger' ? '/api/triggers' : '/api/actions';
-      const res = await apiRequest('POST', endpoint, data);
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include'
+      });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || `Failed to create ${type}`);
+      }
+      
       return res.json();
     },
     onSuccess: () => {

@@ -118,7 +118,18 @@ export default function RuleCreator() {
   // Create rule mutation
   const createMutation = useMutation({
     mutationFn: async (data: InsertRule) => {
-      const res = await apiRequest("POST", "/api/rules", data);
+      const res = await fetch('/api/rules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include'
+      });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || 'Failed to create rule');
+      }
+      
       return res.json();
     },
     onSuccess: () => {
@@ -143,7 +154,18 @@ export default function RuleCreator() {
   const updateMutation = useMutation({
     mutationFn: async (data: InsertRule & { id: number }) => {
       const { id, ...updateData } = data;
-      const res = await apiRequest("PATCH", `/api/rules/${id}`, updateData);
+      const res = await fetch(`/api/rules/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData),
+        credentials: 'include'
+      });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || 'Failed to update rule');
+      }
+      
       return res.json();
     },
     onSuccess: () => {

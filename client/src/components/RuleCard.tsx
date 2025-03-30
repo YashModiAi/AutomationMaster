@@ -68,10 +68,18 @@ export default function RuleCard({ rule }: RuleCardProps) {
   // Toggle rule active status
   const toggleMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest({
-        endpoint: `/api/rules/${rule.id}/toggle`,
-        method: "POST"
+      const res = await fetch(`/api/rules/${rule.id}/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
       });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || 'Failed to toggle rule');
+      }
+      
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/rules'] });
@@ -92,10 +100,18 @@ export default function RuleCard({ rule }: RuleCardProps) {
   // Delete rule
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest({
-        endpoint: `/api/rules/${rule.id}`,
-        method: "DELETE" 
+      const res = await fetch(`/api/rules/${rule.id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
       });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || 'Failed to delete rule');
+      }
+      
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/rules'] });
@@ -118,10 +134,18 @@ export default function RuleCard({ rule }: RuleCardProps) {
   // Trigger rule simulation
   const triggerMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest({
-        endpoint: `/api/rules/${rule.id}/trigger`,
-        method: "POST"
+      const res = await fetch(`/api/rules/${rule.id}/trigger`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
       });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || 'Failed to trigger rule');
+      }
+      
+      return res.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/rules'] });
