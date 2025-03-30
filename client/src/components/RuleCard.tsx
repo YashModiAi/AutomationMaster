@@ -4,9 +4,11 @@ import { useMutation } from "@tanstack/react-query";
 import { Rule } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { formatRelative } from "date-fns";
-import { Pencil, Trash2, ArrowRight } from "lucide-react";
+import { Pencil, Trash2, ArrowRight, Play, Clock, Calendar } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +19,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { formatScheduleDelay } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface RuleCardProps {
   rule: Rule;
@@ -26,6 +30,7 @@ export default function RuleCard({ rule }: RuleCardProps) {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   // Format last triggered date
   const formatLastTriggered = (date: Date | null) => {
@@ -129,53 +134,116 @@ export default function RuleCard({ rule }: RuleCardProps) {
   };
 
   return (
-    <>
-      <div className="rule-card bg-white rounded-lg shadow-md transition-all duration-200 border border-gray-100 overflow-hidden">
+    <TooltipProvider>
+      <div 
+        className={`rule-card bg-white rounded-lg shadow-sm hover:shadow transition-all duration-200 
+          border ${rule.isActive ? 'border-primary/10' : 'border-gray-200'} overflow-hidden
+          ${isHovered ? 'translate-y-[-2px]' : ''}`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         <div className="p-5">
           <div className="flex justify-between items-start mb-3">
             <div className="flex items-center">
-              <span className={`w-3 h-3 ${rule.isActive ? 'bg-green-500' : 'bg-gray-400'} rounded-full mr-2`}></span>
-              <h3 className="font-semibold text-lg text-gray-800">{rule.name}</h3>
+              <Badge 
+                variant={rule.isActive ? "default" : "outline"} 
+                className={`mr-2 text-xs px-1.5 ${!rule.isActive && 'text-gray-500 bg-gray-100'}`}
+              >
+                {rule.isActive ? 'Active' : 'Inactive'}
+              </Badge>
+              <h3 className="font-semibold text-lg text-gray-800 line-clamp-1">{rule.name}</h3>
             </div>
-            <div className="flex">
-              <button 
-                className="text-gray-500 hover:text-gray-700 p-1"
-                onClick={handleEdit}
-              >
-                <Pencil className="h-4 w-4" />
-              </button>
-              <button 
-                className="text-gray-500 hover:text-red-500 p-1"
-                onClick={handleDelete}
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+            <div className="flex space-x-1 ml-2 flex-shrink-0">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                    onClick={handleEdit}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Edit rule</p>
+                </TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 rounded-full text-gray-500 hover:text-red-500 hover:bg-red-50"
+                    onClick={handleDelete}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Delete rule</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
-          <div className="flex items-center mb-4">
+          
+          <div className="flex flex-wrap items-center mb-4 gap-2">
             <div 
-              className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium cursor-pointer"
+              className="bg-primary/10 text-primary text-xs px-2.5 py-1 rounded-full font-medium cursor-pointer flex items-center"
               onClick={handleRuleTest}
               title="Click to test this trigger"
             >
-              {/* Show triggerId since we don't have trigger name directly */}
-              Trigger #{rule.triggerId}
+              <span className="line-clamp-1">Trigger #{rule.triggerId}</span>
             </div>
-            <ArrowRight className="mx-2 h-3 w-3 text-gray-400" />
-            <div className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full font-medium">
-              {/* Show actionId since we don't have action name directly */}
-              Action #{rule.actionId}
+            <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
+            <div className="bg-primary/5 text-primary text-xs px-2.5 py-1 rounded-full font-medium flex items-center">
+              <span className="line-clamp-1">Action #{rule.actionId}</span>
             </div>
+            
+            {rule.actionType === 'scheduled' && rule.scheduleDelay && (
+              <Badge variant="outline" className="ml-1 text-xs bg-orange-50 text-orange-700 border-orange-200 flex items-center">
+                <Clock className="h-3 w-3 mr-1" />
+                {formatScheduleDelay(rule.scheduleDelay)}
+              </Badge>
+            )}
           </div>
-          <p className="text-sm text-gray-600 mb-4">{rule.description}</p>
+          
+          <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+            {rule.description || "No description provided"}
+          </p>
+          
           <div className="flex justify-between items-center">
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-500 flex items-center">
+              <Calendar className="h-3 w-3 mr-1 text-gray-400" />
               {formatLastTriggered(rule.lastTriggered)}
             </span>
-            <Switch 
-              checked={rule.isActive}
-              onCheckedChange={handleToggle}
-            />
+            
+            <div className="flex items-center space-x-2">
+              {rule.isActive && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 px-2 text-xs flex items-center"
+                      onClick={handleRuleTest}
+                    >
+                      <Play className="h-3 w-3 mr-1" />
+                      Test
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Manually trigger this rule</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              
+              <Switch 
+                checked={rule.isActive}
+                onCheckedChange={handleToggle}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -199,6 +267,6 @@ export default function RuleCard({ rule }: RuleCardProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </TooltipProvider>
   );
 }
