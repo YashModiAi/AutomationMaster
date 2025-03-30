@@ -158,11 +158,13 @@ export default function RuleCard({ rule }: RuleCardProps) {
               onClick={handleRuleTest}
               title="Click to test this trigger"
             >
-              {rule.trigger}
+              {/* Show triggerId since we don't have trigger name directly */}
+              Trigger #{rule.triggerId}
             </div>
             <ArrowRight className="mx-2 h-3 w-3 text-gray-400" />
             <div className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full font-medium">
-              {rule.action}
+              {/* Show actionId since we don't have action name directly */}
+              Action #{rule.actionId}
             </div>
           </div>
           <p className="text-sm text-gray-600 mb-4">{rule.description}</p>

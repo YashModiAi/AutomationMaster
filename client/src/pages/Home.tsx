@@ -17,19 +17,18 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [showTips, setShowTips] = useState(true);
 
-  const { data: rules, isLoading, isError } = useQuery<Rule[]>({
-    queryKey: ['/api/rules'],
+  const { data: rules, isLoading, isError, error } = useQuery<Rule[]>({
+    queryKey: ['/api/rules']
   });
 
   const handleCreateRule = () => {
     setLocation("/rules/new");
   };
 
-  const filteredRules = rules?.filter(rule => 
+  const filteredRules = rules?.filter((rule: Rule) => 
     rule.name.toLowerCase().includes(search.toLowerCase()) || 
-    rule.description?.toLowerCase().includes(search.toLowerCase()) ||
-    rule.trigger.toLowerCase().includes(search.toLowerCase()) ||
-    rule.action.toLowerCase().includes(search.toLowerCase())
+    (rule.description?.toLowerCase().includes(search.toLowerCase()) || false)
+    // We don't have the trigger and action names available directly
   );
 
   return (
