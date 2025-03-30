@@ -10,6 +10,8 @@ import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
 import Header from "@/components/Header";
+import EmptyState from "@/components/EmptyState";
+import AddItemDialog from "@/components/AddItemDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,7 +33,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowRight, X } from "lucide-react";
+import { ArrowRight, X, Bell, Zap } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // We need to add validation to make sure the user selects a trigger and action
@@ -54,6 +56,8 @@ export default function RuleCreator() {
 
   const [immediateDetailsVisible, setImmediateDetailsVisible] = useState(true);
   const [scheduledDetailsVisible, setScheduledDetailsVisible] = useState(false);
+  const [isAddTriggerDialogOpen, setIsAddTriggerDialogOpen] = useState(false);
+  const [isAddActionDialogOpen, setIsAddActionDialogOpen] = useState(false);
 
   // Fetch all triggers and actions for selection
   const { data: triggers = [] } = useQuery<Trigger[]>({
@@ -429,9 +433,24 @@ export default function RuleCreator() {
     );
   }
 
+  // Add dialogs for creating triggers and actions
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
+      
+      {/* Add trigger dialog */}
+      <AddItemDialog 
+        open={isAddTriggerDialogOpen} 
+        onOpenChange={setIsAddTriggerDialogOpen} 
+        type="trigger" 
+      />
+      
+      {/* Add action dialog */}
+      <AddItemDialog 
+        open={isAddActionDialogOpen} 
+        onOpenChange={setIsAddActionDialogOpen} 
+        type="action" 
+      />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow-lg border border-gray-200">
@@ -489,17 +508,47 @@ export default function RuleCreator() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {triggers.map((trigger) => (
-                              <SelectItem key={trigger.id} value={String(trigger.id)}>
-                                {trigger.name}
-                              </SelectItem>
-                            ))}
+                            {triggers.length > 0 ? (
+                              triggers.map((trigger) => (
+                                <SelectItem key={trigger.id} value={String(trigger.id)}>
+                                  {trigger.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <div className="p-2 text-center text-sm text-gray-500">
+                                No triggers found. Add one first.
+                              </div>
+                            )}
                           </SelectContent>
                         </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  
+                  {/* Add button to create a new trigger */}
+                  {triggers.length === 0 ? (
+                    <div className="mb-4">
+                      <EmptyState
+                        title="No triggers available"
+                        description="Create a new trigger to use in your automation rule"
+                        buttonText="Create Trigger"
+                        onClick={() => setIsAddTriggerDialogOpen(true)}
+                        icon={<Bell className="h-10 w-10" />}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex justify-end mb-4">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setIsAddTriggerDialogOpen(true)}
+                      >
+                        Add New Trigger
+                      </Button>
+                    </div>
+                  )}
                   
                   <div className="mb-4">
                     <Label className="block text-sm font-medium text-gray-700 mb-1">Trigger Conditions</Label>
@@ -597,17 +646,47 @@ export default function RuleCreator() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {actions.map((action) => (
-                              <SelectItem key={action.id} value={String(action.id)}>
-                                {action.name}
-                              </SelectItem>
-                            ))}
+                            {actions.length > 0 ? (
+                              actions.map((action) => (
+                                <SelectItem key={action.id} value={String(action.id)}>
+                                  {action.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <div className="p-2 text-center text-sm text-gray-500">
+                                No actions found. Add one first.
+                              </div>
+                            )}
                           </SelectContent>
                         </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  
+                  {/* Add button to create a new action */}
+                  {actions.length === 0 ? (
+                    <div className="mb-4">
+                      <EmptyState
+                        title="No actions available"
+                        description="Create a new action to use in your automation rule"
+                        buttonText="Create Action"
+                        onClick={() => setIsAddActionDialogOpen(true)}
+                        icon={<Zap className="h-10 w-10" />}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex justify-end mb-4">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setIsAddActionDialogOpen(true)}
+                      >
+                        Add New Action
+                      </Button>
+                    </div>
+                  )}
                   
                   <Tabs defaultValue="immediate" className="mb-4">
                     <TabsList className="w-full grid grid-cols-2">
