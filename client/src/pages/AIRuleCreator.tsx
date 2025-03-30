@@ -3,13 +3,21 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "../hooks/use-toast";
 import { apiRequest, queryClient } from "../lib/queryClient";
-import { InsertRule } from "@shared/schema";
+import { InsertRule, userTypeEnum } from "@shared/schema";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import { Badge } from "../components/ui/badge";
 import { Spinner } from "../components/ui/spinner";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { formatTimeToNow, getActionTypeLabel, formatScheduleDelay } from "../lib/utils";
 
 interface RuleSuggestion {
@@ -31,6 +39,7 @@ export default function AIRuleCreator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [suggestions, setSuggestions] = useState<RuleSuggestion[]>([]);
   const [selectedSuggestion, setSelectedSuggestion] = useState<RuleSuggestion | null>(null);
+  const [selectedUserType, setSelectedUserType] = useState<string>("admin");
   const [_, navigate] = useLocation();
   
   // Example prompts that users can try
@@ -155,6 +164,7 @@ export default function AIRuleCreator() {
       actionId: selectedSuggestion.actionId,
       actionType: selectedSuggestion.actionType,
       actionDetails: selectedSuggestion.actionDetails,
+      userType: selectedUserType as any, // Use the selected user type
       isActive: true,
     };
 
@@ -197,6 +207,29 @@ export default function AIRuleCreator() {
 
       <Card className="p-6 mb-8 border-primary/30">
         <h2 className="text-xl font-semibold mb-4">Create New Automation</h2>
+        
+        {/* User type selection */}
+        <div className="mb-6">
+          <Label htmlFor="userType" className="font-medium block mb-2">Rule category:</Label>
+          <Select
+            value={selectedUserType}
+            onValueChange={setSelectedUserType}
+          >
+            <SelectTrigger className="w-full md:w-[300px]">
+              <SelectValue placeholder="Select user type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="admin">Admin/Business Owner</SelectItem>
+              <SelectItem value="security">Security Team</SelectItem>
+              <SelectItem value="maintenance">Housekeeping & Maintenance</SelectItem>
+              <SelectItem value="host">Host/Property Manager</SelectItem>
+              <SelectItem value="guest">Guest</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-sm text-muted-foreground mt-1">
+            Categorize this rule based on which role it's most relevant for
+          </p>
+        </div>
         
         {/* Information about available triggers and actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 p-4 bg-muted/30 rounded-lg">
@@ -344,16 +377,44 @@ export default function AIRuleCreator() {
           </div>
           
           {selectedSuggestion && (
-            <div className="mt-6 flex justify-end">
-              <Button
-                onClick={handleCreateRule}
-                disabled={createRuleMutation.isPending}
-                className="w-full sm:w-auto"
-                size="lg"
-              >
-                {createRuleMutation.isPending ? <Spinner className="mr-2" /> : null}
-                {createRuleMutation.isPending ? "Creating..." : "Create Selected Rule"}
-              </Button>
+            <div className="mt-6">
+              <div className="mb-4 p-4 bg-muted/30 rounded-lg">
+                <h3 className="text-sm font-medium mb-2">Selected user category:</h3>
+                <Badge
+                  className={
+                    selectedUserType === 'admin'
+                      ? 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200'
+                      : selectedUserType === 'security'
+                      ? 'bg-red-100 text-red-800 hover:bg-red-200'
+                      : selectedUserType === 'maintenance'
+                      ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                      : selectedUserType === 'host'
+                      ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                      : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                  }
+                >
+                  {selectedUserType === 'admin'
+                    ? 'Admin/Business Owner'
+                    : selectedUserType === 'security'
+                    ? 'Security Team'
+                    : selectedUserType === 'maintenance'
+                    ? 'Housekeeping & Maintenance'
+                    : selectedUserType === 'host'
+                    ? 'Host/Property Manager'
+                    : 'Guest'}
+                </Badge>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleCreateRule}
+                  disabled={createRuleMutation.isPending}
+                  className="w-full sm:w-auto"
+                  size="lg"
+                >
+                  {createRuleMutation.isPending ? <Spinner className="mr-2" /> : null}
+                  {createRuleMutation.isPending ? "Creating..." : "Create Selected Rule"}
+                </Button>
+              </div>
             </div>
           )}
         </Card>

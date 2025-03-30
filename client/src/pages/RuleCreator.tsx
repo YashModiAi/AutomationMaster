@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { InsertRule, Rule, actionScheduleEnum, insertRuleSchema } from "@shared/schema";
+import { InsertRule, Rule, actionScheduleEnum, insertRuleSchema, userTypeEnum } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -21,7 +21,8 @@ import {
   FormField, 
   FormItem, 
   FormLabel, 
-  FormMessage 
+  FormMessage,
+  FormDescription
 } from "@/components/ui/form";
 import { 
   Select, 
@@ -33,14 +34,18 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowRight, X, Bell, Zap } from "lucide-react";
+import { ArrowRight, X, Bell, Zap, User } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 // We need to add validation to make sure the user selects a trigger and action
 const ruleFormSchema = insertRuleSchema.extend({
   name: z.string().min(1, "Rule name is required"),
   triggerId: z.number().min(1, "Trigger is required"),
   actionId: z.number().min(1, "Action is required"),
+  userType: z.enum(["admin", "security", "maintenance", "host", "guest"], {
+    required_error: "Please select a user type",
+  }),
 });
 
 type RuleFormValues = z.infer<typeof ruleFormSchema>;
@@ -86,6 +91,7 @@ export default function RuleCreator() {
       actionType: "immediate",
       actionDetails: {},
       scheduleDelay: 0,
+      userType: "admin", // Default to admin
       isActive: true,
     },
   });
@@ -104,6 +110,7 @@ export default function RuleCreator() {
   const selectedActionId = form.watch("actionId");
   const watchedActionType = form.watch("actionType") as "immediate" | "scheduled";
   const watchedScheduleDelay = form.watch("scheduleDelay");
+  const watchedUserType = form.watch("userType");
 
   const selectedTrigger = triggers.find(t => t.id === selectedTriggerId);
   const selectedAction = actions.find(a => a.id === selectedActionId);
@@ -474,7 +481,7 @@ export default function RuleCreator() {
                 control={form.control}
                 name="name"
                 render={({ field }) => (
-                  <FormItem className="mb-6">
+                  <FormItem className="mb-4">
                     <FormLabel>Rule Name</FormLabel>
                     <FormControl>
                       <Input 
@@ -482,6 +489,38 @@ export default function RuleCreator() {
                         {...field} 
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {/* User Type Selector */}
+              <FormField
+                control={form.control}
+                name="userType"
+                render={({ field }) => (
+                  <FormItem className="mb-6">
+                    <FormLabel>User Type</FormLabel>
+                    <FormDescription>
+                      Select the type of user this rule is for
+                    </FormDescription>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a user type..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin/Business Owner</SelectItem>
+                        <SelectItem value="security">Security Team</SelectItem>
+                        <SelectItem value="maintenance">Housekeeping & Maintenance</SelectItem>
+                        <SelectItem value="host">Host/Property Manager</SelectItem>
+                        <SelectItem value="guest">Guest</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -741,6 +780,33 @@ export default function RuleCreator() {
               {/* Preview Section */}
               <div className="mt-8 p-5 bg-gray-50 rounded-lg">
                 <h3 className="text-lg font-medium text-gray-800 mb-4">Preview</h3>
+                <div className="flex items-center mb-2">
+                  {watchedUserType && (
+                    <Badge
+                      className={`mr-3 ${
+                        watchedUserType === 'admin'
+                          ? 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200'
+                          : watchedUserType === 'security'
+                          ? 'bg-red-100 text-red-800 hover:bg-red-200'
+                          : watchedUserType === 'maintenance'
+                          ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                          : watchedUserType === 'host'
+                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                          : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                      }`}
+                    >
+                      {watchedUserType === 'admin'
+                        ? 'Admin/Business Owner'
+                        : watchedUserType === 'security'
+                        ? 'Security Team'
+                        : watchedUserType === 'maintenance'
+                        ? 'Housekeeping & Maintenance'
+                        : watchedUserType === 'host'
+                        ? 'Host/Property Manager'
+                        : 'Guest'}
+                    </Badge>
+                  )}
+                </div>
                 <div className="flex items-center">
                   <div className="text-base">
                     <span className="font-medium">If</span> <span className="text-blue-600">{selectedTrigger?.name || "a trigger"}</span> <span className="font-medium">happens, then</span> <span className="text-green-600">{selectedAction?.name || "an action"}</span> <span className="font-medium">will execute</span> <span className="text-purple-600">{getDelayText()}</span>
